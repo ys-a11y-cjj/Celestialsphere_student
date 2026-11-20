@@ -847,6 +847,22 @@ body.stu-split #stuStrip{gap:6px}
 #stuHomePage .hp-load{display:none;margin:-8px 0 14px;font-size:13px;color:#9fb2cc}
 #stuHomePage.loading .hp-load{display:block}
 #tStub,#dataMenu{display:none!important}
+/* 天球赤道標籤（放在天球外側） */
+.stu-eqout{display:none;position:fixed;z-index:31;pointer-events:none;white-space:nowrap;font-size:13px;font-weight:700;line-height:1.15;color:#8fdcff;text-shadow:0 0 4px #000,0 0 8px #000}
+.stu-eqout span{display:inline}
+.stu-eqout.stack span{display:block}
+body.stu-noui .stu-eqout{display:none}
+/* 1-1 依序觀察：步驟之間的箭頭、「下一步」提示 */
+#stuSteps.flow{align-items:center;gap:4px;padding-top:6px}
+#stuSteps.flow .stu-arrow{flex:0 0 auto;color:#8ea3c2;font-size:20px;font-weight:700;line-height:1}
+#stuSteps .stu-step.next{position:relative;border-color:#ffd34d;color:#ffe9a6;animation:stuPulse 1.6s ease-in-out infinite}
+#stuSteps .stu-step.next::after{content:'下一步';position:absolute;top:-9px;right:6px;font-size:10.5px;font-weight:800;line-height:1;padding:3px 6px;border-radius:8px;background:#ffd34d;color:#1a1200}
+@keyframes stuPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,211,77,0)}50%{box-shadow:0 0 0 4px rgba(255,211,77,.33)}}
+/* 不顯示日期、時刻 */
+body.stu-nodate #stuDate{display:none!important}
+body.stu-noclock .stu-clock{visibility:hidden}
+/* 2-1 緯度大字 */
+#stuBig .bd.bl{font-size:30px;letter-spacing:.5px;color:#ffe08a}
 
 </style>
 </head>
@@ -5838,17 +5854,25 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
   var U4 = ['sun', 'horizon', 'observer', 'obsDir', 'lblDir'];
   function on() { var a = []; for (var i = 0; i < arguments.length; i++) a = a.concat(arguments[i]); return a; }
 
+  /* 1-1 從地面到天球：① 地面 → ② 地平 → ③ 天球，三段都讓星星自動轉動、時刻接續 */
+  var U0 = on(U2, ['shell']), FLOW_TIP = '觀察如何從地面視角想像星空的運動-天球模型';
+  var FLOW = [
+    { group: '① 地面', tip: FLOW_TIP, flow: true, on: U0, mode: 'observer', az: 180, lat: 25, doy: D1116, minutes: 20 * 60, spinAuto: true, keepTime: true, noDate: true, noClock: true },
+    { group: '② 地平', tip: FLOW_TIP, flow: true, on: U0, mode: 'horizon', lat: 25, doy: D1116, minutes: 20 * 60, spinAuto: true, keepTime: true, noDate: true, noClock: true, eqOut: true },
+    { group: '③ 天球', tip: FLOW_TIP, flow: true, on: on(U0, ['earth']), mode: 'equatorial', lat: 25, doy: D1116, minutes: 20 * 60, spinAuto: true, keepTime: true, noDate: true, noClock: true, eqOut: true }
+  ];
   var UNITS = [
     { n: 1, name: '天球', tasks: [
-      { no: '1-1', name: '認識天球', steps: [{ tip: '天球視角・拉時刻滑桿，或按「自轉」讓天球轉起來', on: U1, face: true, mode: 'equatorial', lat: 25, doy: D1116, minutes: 21 * 60, eqLabels: true, ctl: [{ k: 'time', spin: true }] }] },
-      { no: '1-2', name: '黃道與二分二至', steps: [{ tip: '天球視角・按四個分至點，看太陽在黃道上的位置', on: on(U1, ['eclPoints', 'sun', 'obliquity']), face: true, mode: 'equatorial', lat: 25, doy: SD[1], minutes: 12 * 60, ctl: [{ k: 'season' }] }] },
-      { no: '1-3', name: '黃道星座與一年一圈', steps: [{ tip: '天球視角・日期自動播放，看太陽經過哪些星座', on: on(U1, ['zodStars', 'sun']), face: true, autoYear: true, eqLabels: true, mode: 'equatorial', lat: 25, doy: TODAY, minutes: 21 * 60, toggles: [{ label: '連線與名稱', keys: ['zodLines', 'zodNames', 'astShow'], def: true }], ctl: [{ k: 'dateEnds', play: true }] }] }
+      { no: '1-1', name: '從地面到天球', steps: FLOW },
+      { no: '1-2', name: '認識天球', steps: [{ tip: '天球視角・拉時刻滑桿，或按「自轉」讓天球轉起來，並觀察天球轉動時的方向。', on: U1, face: true, mode: 'equatorial', lat: 25, doy: D1116, minutes: 21 * 60, eqLabels: true, ctl: [{ k: 'time', spin: true }] }] },
+      { no: '1-3', name: '黃道與二分二至', steps: [{ tip: '天球視角・按四個分至點，看太陽在黃道上的位置。太陽在黃道上運動一圈所花時間為一年。', on: on(U1, ['eclPoints', 'sun']), face: true, mode: 'equatorial', lat: 25, doy: SD[1], minutes: 12 * 60, toggles: [{ label: '夾角', keys: ['obliquity'] }], ctl: [{ k: 'season' }, { k: 'dateEnds', play: true }] }] },
+      { no: '1-4', name: '黃道星座與一年一圈', steps: [{ tip: '天球視角・日期自動播放，看太陽在一年之中經過哪些星座，這些星座即稱為黃道星座。', on: on(U1, ['zodStars', 'sun']), face: true, autoYear: true, eqLabels: true, mode: 'equatorial', lat: 25, doy: TODAY, minutes: 21 * 60, toggles: [{ label: '連線與名稱', keys: ['zodLines', 'zodNames', 'astShow'], def: true }], ctl: [{ k: 'dateEnds', play: true }] }] }
     ] },
     { n: 2, name: '周日運動', tasks: [
-      { no: '2-1', name: '從天球看地平面與星軌', steps: [{ tip: '地平模式・拉緯度滑桿，看星軌和地平面的角度', on: on(U2, ['trails', 'shell']), mode: 'horizon', lat: 25, doy: D1116, minutes: 20 * 60, pre: 6, ctl: [{ k: 'lat', set: LAT_A }] }] },
-      { no: '2-2', name: '從天球飛到地面', steps: [{ tip: '導覽動畫・天球 → 地平 → 地面，可以重播', on: U2, mode: 'equatorial', lat: 25, doy: D1116, minutes: 20 * 60, az: 180, ctl: [{ k: 'tour' }] }] },
-      { no: '2-3', name: '天北極的仰角＝緯度', steps: [{ tip: '面向北・拉緯度滑桿、換方位，對照小天球', on: on(U2, ['axisAlt']), mode: 'observer', az: 0, lat: 25, view: 'lat', semi: true, doy: D1116, minutes: 20 * 60, inset: 'pole', noFrame: true, ctl: [{ k: 'lat', set: LAT_A }, { k: 'az' }] }] },
-      { no: '2-4', name: '在地面看星星怎麼動', steps: null }
+      /* 2-1：只留畫星軌的亮星（不開背景星空）、星軌畫滿 24 小時 */
+      { no: '2-1', name: '從天球看地平面與星軌', steps: [{ tip: '地平模式，拉動緯度滑桿，觀察地軸的仰角變化與星星軌跡之間的關係。', on: on(U2.filter(function (k) { return k !== 'bgstars'; }), ['trails', 'shell']), mode: 'horizon', lat: 25, doy: D1116, minutes: 20 * 60, pre: 24, trailH: 24, eqOut: true, big: true, bigLat: true, ctl: [{ k: 'lat', set: LAT_C }] }] },
+      { no: '2-2', name: '天北極的仰角＝緯度', steps: [{ tip: '面向北・拉緯度滑桿、換方位，對照小天球', on: on(U2, ['axisAlt']), mode: 'observer', az: 0, lat: 25, view: 'lat', semi: true, doy: D1116, minutes: 20 * 60, inset: 'pole', noFrame: true, noDate: true, ctl: [{ k: 'lat', set: LAT_A }, { k: 'az' }] }] },
+      { no: '2-3', name: '在地面看星星怎麼動', steps: null }
     ] },
     { n: 3, name: '星空的周年運動', tasks: [
       { no: '3-1', name: '太陽走在黃道上', steps: [{ tip: '天球視角・拉日期滑桿，看太陽在哪個星座', big: true, on: ['ecliptic', 'zodStars', 'zodLines', 'zodNames', 'sun', 'lblDir', 'bgstars', 'equator', 'axis', 'shell'], mode: 'equatorial', lat: 25, doy: D1116, minutes: 20 * 60, ctl: [{ k: 'month' }] }] },
@@ -5863,7 +5887,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
       { no: '4-4', name: '不同緯度的太陽', steps: [{ tip: '地平模式・冬至・拉緯度滑桿', sun: true, on: on(U4, ['shell', 'winter', 'equinox', 'summer', 'axis', 'ncp', 'scp']), toggles: [{ label: '仰角', keys: ['axisAlt'] }], mode: 'horizon', lat: 25, doy: SD[3], minutes: 12 * 60, ctl: [{ k: 'lat', set: LAT_C }] }] }
     ] }
   ];
-  UNITS[1].tasks[3].steps = [
+  UNITS[1].tasks[2].steps = [
     { group: '① 看移動', tip: '① 面向東，把時刻從 18:00 拉到隔天 06:00，看星星怎麼移動', on: U2, mode: 'observer', az: 90, lat: 25, doy: D1116, minutes: 18 * 60, ctl: [{ k: 'time1806' }] },
     { group: '② 拍星軌', tip: '② 照片模式：拉緯度、換方位，每個組合都看一次星軌', on: on(U2, ['trails', 'photoInset']), mode: 'observer', az: 90, lat: 25, doy: D1116, minutes: 20 * 60, photo: true, tinset: true, ctl: [{ k: 'lat', set: LAT_A }, { k: 'az' }] },
     { group: '③ 量夾角', tip: '③ 回到台北、面向東，讀出星軌和地平線的夾角', on: on(U2, ['trails', 'tAngle', 'photoInset']), mode: 'observer', az: 90, lat: 25, doy: D1116, minutes: 20 * 60, photo: true, tinset: true, ctl: [{ k: 'az' }] }
@@ -5998,12 +6022,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
   }
 
   function go(u, n, k) {
+    var same = lastTask === u + ':' + n; lastTask = u + ':' + n;
     ui = u; ti = n; si = k; preId++;
     var t = tasks()[ti], s = t.steps[si];
     var wantTopic = s.sun ? 'sun' : 'star';
     if (S.topic !== wantTopic) C.setTopic(wantTopic);
     if (S.photo && !s.photo) C.togglePhoto();
-    if (S.play) C.togglePlay(S.play);
+    if (S.play && !(same && s.spinAuto && S.play === 'day')) C.togglePlay(S.play);
     KEYS.forEach(function (key) { T[key] = false; });
     s.on.forEach(function (key) { T[key] = true; });
     if (T.zodLines) T.astShow = true;
@@ -6011,16 +6036,17 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
     S.sky = s.sky || 'night';
     if (S.mode !== s.mode) C.setMode(s.mode);
     else if (!s.face && s.mode !== 'observer' && backBtn.classList.contains('on')) C.setMode(s.mode);   /* 同樣是天球／地平視角、學生轉過鏡頭：換題時轉回預設位置 */
-    if (!s.face && s.mode !== 'observer' && wasFace) C.setMode(s.mode);   /* 從單元一（鏡頭轉向春分點）離開：其他單元的天球照原本的預設方向 */
-    wasFace = !!s.face;
+    if (!s.face && s.mode !== 'observer') unFace();   /* 鏡頭曾轉向春分點（1-2～1-4）：其他題目的天球照原本的預設方向 */
     C.setLat(s.lat);
-    S.doy = s.doy; S.minutes = s.minutes;
+    S.doy = s.doy; if (!(same && s.keepTime)) S.minutes = s.minutes;
+    S.trailH = s.trailH || TRAILH0;
     if (s.az != null) { C.OBS.az = s.az; C.OBS.anim = null; }
     setView(s, s.lat);
     if (s.photo && !S.photo) setTimeout(function () { if (!S.photo) C.togglePhoto(); openTeacherInset(); }, 60);
     else if (s.photo) openTeacherInset();
     if (s.pre) prerun(s.pre);
     track = null; sphReset();
+    if (s.spinAuto && S.play !== 'day') C.togglePlay('day');   /* 1-1：星星自動轉動，換角度時不中斷 */
     if (s.autoYear) { C.togglePlay('year'); S.minutes = s.minutes; }   /* 1-3：進來就自動播放日期（引擎開始播放時會把時刻改成 20:00，改回本題的時刻） */
     if (s.face) faceVE();
     if (s.track) setTimeout(captureTrack, 1200);
@@ -6035,12 +6061,16 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
     document.body.classList.toggle('stu-inon', !!s.inset);
     document.body.classList.toggle('stu-dayon', !!s.daylen);
     document.body.classList.toggle('stu-split', !!s.split);
+    document.body.classList.toggle('stu-nodate', !!s.noDate);
+    document.body.classList.toggle('stu-noclock', !!s.noClock);
 
-    stepsEl.innerHTML = '';
+    stepsEl.innerHTML = ''; stepsEl.classList.toggle('flow', !!s.flow);
     var groups = [];
     t.steps.forEach(function (st) { if (st.group && groups.indexOf(st.group) < 0) groups.push(st.group); });
-    if (groups.length > 1) groups.forEach(function (g) {
-      var b = el('button', 'stu-btn stu-step' + (g === s.group ? ' on' : ''), g);
+    var gNow = groups.indexOf(s.group);
+    if (groups.length > 1) groups.forEach(function (g, gi) {
+      if (s.flow && gi) stepsEl.appendChild(el('span', 'stu-arrow', '›'));
+      var b = el('button', 'stu-btn stu-step' + (g === s.group ? ' on' : '') + (s.flow && gi === gNow + 1 ? ' next' : ''), g);
       b.onclick = function () { for (var i = 0; i < t.steps.length; i++) if (t.steps[i].group === g) return go(ui, ti, i); };
       stepsEl.appendChild(b);
     });
@@ -6090,10 +6120,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
       }
     }, 400);
   }
-  var wasFace = false;
+  var faceDirty = false, lastTask = '', TRAILH0 = S.trailH;
   var preId = 0;   /* 換題時讓還沒跑完的星軌預跑停下，免得跑完時把下一題的時刻蓋掉 */
   function prerun(h) {
-    var end = S.minutes, n = 48, i = 0, st = h * 60 / n, id = ++preId;
+    var end = S.minutes, n = Math.max(48, h * 6), i = 0, st = h * 60 / n, id = ++preId;
     S.minutes = (end - h * 60 + 1440) % 1440;
     (function f() { if (id !== preId) return; if (i++ >= n) { S.minutes = end; return; } S.minutes = (S.minutes + st) % 1440; requestAnimationFrame(f); })();
   }
@@ -6150,25 +6180,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
   }
   function buildCtl(s) {
     ctlEl.innerHTML = ''; marks = []; syncers = [];
-    s.ctl.forEach(function (c) {
+    (s.ctl || []).forEach(function (c) {
       var k = c.k;
       if (k === 'lat') ctlEl.appendChild(sliderX({ min: -90, max: 90, val: s.lat, label: '緯度', ticks: c.set, snap: 1, stagger: c.set.length > 5, get: function () { return S.lat; },
         input: function (v) { C.setLat(v); setView(s, v); if (s.pre) { clearTimeout(buildCtl._t); buildCtl._t = setTimeout(function () { prerun(s.pre); }, 250); } } }));
       if (k === 'az') ctlEl.appendChild(rowOf(AZ, function () { return ((C.OBS.az % 360) + 360) % 360; }, function (v) { C.OBS.az = v; C.OBS.anim = null; if (home) home.az = v; }));
-      if (k === 'season') ctlEl.appendChild(rowOf(SEASONS, function () { return S.doy; }, function (v) { S.doy = v; }));
+      if (k === 'season') ctlEl.appendChild(rowOf(SEASONS, function () { return S.doy; }, function (v) { if (S.play === 'year') C.togglePlay('year'); S.doy = v; }));
       if (k === 'sky') ctlEl.appendChild(rowOf([['白天的天空', 1], ['把天空變暗', 0]], function () { return S.sky === 'real' ? 1 : 0; }, function (v) { S.sky = v ? 'real' : 'night'; C.updateUI(); }));
-      if (k === 'tour') {
-        var r = el('div', 'stu-row');
-        r.appendChild(el('button', 'stu-btn stu-play', '▶ 重播'));
-        [['天球', 'equatorial'], ['地平', 'horizon'], ['地面', 'observer']].forEach(function (it) {
-          var b = el('button', 'stu-btn stu-seg'); b.textContent = it[0]; b.dataset.m = it[1];
-          b.onclick = function () { C.setMode(it[1]); var obs = it[1] === 'observer'; document.body.classList.toggle('stu-obs', obs); document.body.classList.toggle('stu-sphere', !obs); if (obs) { C.OBS.az = 180; setView(Object.assign({}, s, { mode: 'observer' }), 25); } };
-          r.appendChild(b);
-        });
-        r._mark = function () { [].forEach.call(r.querySelectorAll('.stu-seg'), function (b) { b.classList.toggle('on', b.dataset.m === S.mode); }); };
-        marks.push(r); ctlEl.appendChild(r);
-        togBox.appendChild(el('button', 'stu-tog skip', '略過動畫 ›'));
-      }
       if (k === 'time') {
         var w2 = sliderX({ min: 0, max: 1440, val: s.minutes, label: '時刻', ticks: [['0:00', 0], ['6:00', 360], ['12:00', 720], ['18:00', 1080], ['24:00', 1440]], get: function () { return S.minutes; }, input: function (v) { if (S.play === 'day') C.togglePlay('day'); S.minutes = Math.min(v, 1439.9); } });
         if (c.spin) {
@@ -6249,7 +6267,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
   function norm(v) { var l = Math.hypot(v[0], v[1], v[2]); return [v[0] / l, v[1] / l, v[2] / l]; }
   function renderInset(s0) {
     var kind = s0.inset, s = '', i, A = C.OBS.az;
-    s += '<circle cx="' + IN.cx + '" cy="' + IN.cy + '" r="' + IN.r + '" fill="rgba(120,150,200,.10)" stroke="rgba(170,195,235,.55)" stroke-width="1"/>';
+    if (kind === 'pole') {   /* 2-2：畫出天球球殼（半透明玻璃球） */
+      s += '<defs><radialGradient id="siShell" cx="50%" cy="46%" r="52%"><stop offset="0%" stop-color="#9fb8e6" stop-opacity=".05"/><stop offset="70%" stop-color="#9fb8e6" stop-opacity=".14"/><stop offset="100%" stop-color="#cfe0ff" stop-opacity=".45"/></radialGradient></defs>';
+      s += '<circle cx="' + IN.cx + '" cy="' + IN.cy + '" r="' + IN.r + '" fill="url(#siShell)" stroke="rgba(200,220,255,.85)" stroke-width="1.3"/>';
+    } else s += '<circle cx="' + IN.cx + '" cy="' + IN.cy + '" r="' + IN.r + '" fill="rgba(120,150,200,.10)" stroke="rgba(170,195,235,.55)" stroke-width="1"/>';
     var hor = []; for (i = 0; i <= 72; i++) hor.push(prj(aav(0, i * 5)));
     s += '<polygon points="' + pts(hor) + '" fill="rgba(110,170,90,.28)" stroke="rgba(160,210,140,.8)" stroke-width="1"/>';
     [['北', 0], ['東', 90], ['南', 180], ['西', 270]].forEach(function (d) { var p = prj(aav(0, d[1]).map(function (x) { return x * 1.16; })); s += '<text x="' + p[0].toFixed(1) + '" y="' + (p[1] + 4).toFixed(1) + '" class="si-d">' + d[0] + '</text>'; });
@@ -6343,10 +6364,20 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
      做法：讓引擎照常把鏡頭轉回預設位置（同樣的距離與高度），只把終點的方位改成春分點的方向。 */
   var FACE = null;
   function faceGoal(p) { var a = veNow(), rh = Math.hypot(p.x, p.z); return new V3(rh * Math.cos(a), p.y, rh * Math.sin(a)); }
+  var DEFAZ = null;
+  function unFace() {
+    if (!faceDirty || DEFAZ == null) return;
+    if (!C.cam) C.setMode(S.mode);                 /* 沒有轉場：同模式再設一次，讓引擎轉回預設位置 */
+    var an = C.cam;
+    if (an && an.p1) { var p1 = an.p1, rh = Math.hypot(p1.x, p1.z); p1.set(rh * Math.cos(DEFAZ), p1.y, rh * Math.sin(DEFAZ)); }
+    faceDirty = false;
+  }
   function faceVE() {
     if (!CAL || S.mode !== 'equatorial') { FACE = { pending: true }; return; }
     C.setMode('equatorial');                       /* 同模式再設一次 = 引擎把鏡頭轉回預設位置 */
+    faceDirty = true;
     var an = C.cam;
+    if (an && an.p1 && DEFAZ == null) DEFAZ = Math.atan2(an.p1.z, an.p1.x);   /* 引擎預設鏡頭的方位，離開單元一時轉回來 */
     if (an && an.p1) { an.p1.copy(faceGoal(an.p1)); FACE = { goal: an.p1.clone() }; SPH.home = FACE.goal.clone(); }
     else { var g = faceGoal(C.camera.position); C.camera.position.copy(g); C.camera.lookAt(0, 0, 0); FACE = { goal: g.clone() }; SPH.home = g.clone(); }
   }
@@ -6418,13 +6449,53 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
     });
   }
 
+  /* 天球赤道的文字標籤放在天球外側（不擋住天球）：取赤道在畫面上最右（或最左）的點，也就是赤道碰到天球邊緣的地方 */
+  var eqOutEl = el('div', 'stu-eqout'); eqOutEl.innerHTML = '<span>天球</span><span>赤道</span>'; document.body.appendChild(eqOutEl);
+  function placeEqOut() {
+    var m = S.mode, tq = m === 'equatorial' ? 1 : 0;
+    if ((m !== 'horizon' && m !== 'equatorial') || C.cam || !T.equator || Math.abs(C.P.tEq - tq) > 0.01) { eqOutEl.style.display = 'none'; return; }
+    /* 地平模式：x＝東、y＝天頂、−z＝北；天北極在北方仰角＝緯度。天球模式：天極朝上，赤道在 y＝0 */
+    var f = S.lat * D2R, E = [1, 0, 0], Q = m === 'equatorial' ? [0, 0, 1] : [0, -Math.cos(f), -Math.sin(f)];
+    var c = scr([0, 0, 0]), far = null, fd = -1;
+    for (var i = 0; i < 180; i++) {   /* 赤道上離球心（畫面上）最遠的點＝赤道碰到天球邊緣的地方，兩端各一個 */
+      var t = i * 2 * D2R, co = Math.cos(t), sn = Math.sin(t), p = scr([E[0] * co + Q[0] * sn, E[1] * co + Q[1] * sn, E[2] * co + Q[2] * sn]);
+      var d = Math.hypot(p[0] - c[0], p[1] - c[1]); if (d > fd) { fd = d; far = p; }
+    }
+    var ends = [far, [2 * c[0] - far[0], 2 * c[1] - far[1]]], W = innerWidth, H = innerHeight;
+    var topY = top.getBoundingClientRect().bottom + 2, botY = bot.getBoundingClientRect().top - 2;
+    var kids = document.getElementById('labels').children, others = [];
+    for (var k = 0; k < kids.length; k++) { var o = kids[k]; if (o.style.display !== 'none' && o.offsetWidth) others.push(o.getBoundingClientRect()); }
+    eqOutEl.style.display = 'block';
+    var best = null;
+    [false, true].forEach(function (stack) {
+      eqOutEl.classList.toggle('stack', stack);
+      var w = eqOutEl.offsetWidth, h = eqOutEl.offsetHeight;
+      ends.forEach(function (T0) {
+        var ux = T0[0] - c[0], uy = T0[1] - c[1], L = Math.hypot(ux, uy) || 1; ux /= L; uy /= L;
+        for (var dd = fd + 5; dd < fd + 60; dd += 2) {   /* 沿著球心往外推，直到整個標籤都在天球外 */
+          var cx = c[0] + ux * dd + ux * w / 2, cy = c[1] + uy * dd + uy * h / 2, x = cx - w / 2, y = cy - h / 2;
+          var nx = clamp(c[0], x, x + w), ny = clamp(c[1], y, y + h);
+          if (Math.hypot(nx - c[0], ny - c[1]) < fd + 5) continue;
+          var bad = Math.max(0, 2 - x) + Math.max(0, x + w - (W - 2)) + Math.max(0, topY - y) + Math.max(0, y + h - botY);
+          others.forEach(function (r) { if (x < r.right && x + w > r.left && y < r.bottom && y + h > r.top) bad += 40; });
+          var score = bad * 10 + (stack ? 5 : 0) + (dd - fd);
+          if (!best || score < best.score) best = { score: score, x: x, y: y, stack: stack };
+          break;
+        }
+      });
+    });
+    eqOutEl.classList.toggle('stack', best.stack);
+    eqOutEl.style.left = clamp(best.x, 1, W - eqOutEl.offsetWidth - 1).toFixed(1) + 'px'; eqOutEl.style.top = best.y.toFixed(1) + 'px';
+  }
   function setTxt(e, t) { if (e._t !== t) { e._t = t; e.textContent = t; } }
   function setHTML(e, h) { if (e._h !== h) { e._h = h; e.innerHTML = h; } }
   function tick() {
     var mp = mdParts(S.doy), sn = seasonOf(S.doy);
+    var latBig = Math.abs(S.lat) < 0.3 ? '赤道 0°' : (S.lat > 0 ? '北緯 ' : '南緯 ') + fmtDeg(S.lat) + '°';
     setTxt(clockTop, mdOf(S.doy) + '　' + hhmm(S.minutes));
     var badge = sn ? '<span class="bs">' + sn + '</span>' : '';
-    setHTML(bigEl, '<span class="bd">' + mp[0] + '月' + mp[1] + '日</span><span class="bt">' + hhmm(S.minutes) + '</span>' + badge +
+    if (cur && cur.s.bigLat) setHTML(bigEl, '<span class="bd bl">' + latBig + '</span>');
+    else setHTML(bigEl, '<span class="bd">' + mp[0] + '月' + mp[1] + '日</span><span class="bt">' + hhmm(S.minutes) + '</span>' + badge +
       (cur && cur.s.daylen ? '<div class="dl"><span>晝長 <b>' + hm(dayLen()) + '</b>' + (dayLen() >= 24 ? '（永晝）' : '') + '</span><span>夜長 <b>' + hm(24 - dayLen()) + '</b>' + (dayLen() <= 0 ? '（永夜）' : '') + '</span></div>' : ''));
     var obs = S.mode === 'observer';
     var tr = renderTrack();
@@ -6463,6 +6534,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
       if (IN.open) renderInset(cur.s);
     }
     if (cur && cur.s.eqLabels) placeEqLabels(); else eqLab.style.display = ecLab.style.display = 'none';
+    if (cur && cur.s.eqOut) placeEqOut(); else eqOutEl.style.display = 'none';
     decorateLabels();
     if (!obs) clampLabels();
     requestAnimationFrame(tick);
@@ -6579,7 +6651,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
     UNITS: UNITS
   };
   /* 開機：先停在 1-1（天球視角）讓 1-1 的赤道／黃道標籤校準，首頁蓋在上面；校準完才開放進入單元 */
-  go(0, 0, 0);
+  go(0, 1, 0);
   C.applyView();
   showHome(true); homeEl.classList.add('loading');
   setTimeout(calibrate, 1500);
